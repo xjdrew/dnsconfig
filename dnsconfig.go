@@ -5,14 +5,11 @@
 package dnsconfig
 
 import (
-	"os"
 	"time"
 )
 
 var (
 	defaultNS = []string{"127.0.0.1:53", "[::1]:53"}
-
-	getHostname = os.Hostname // variable for testing
 )
 
 type DnsConfig struct {

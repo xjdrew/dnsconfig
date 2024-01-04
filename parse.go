@@ -11,7 +11,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"time"
 )
 
 type file struct {
@@ -64,28 +63,12 @@ func (f *file) readLine() (s string, ok bool) {
 	return
 }
 
-func (f *file) stat() (mtime time.Time, size int64, err error) {
-	st, err := f.file.Stat()
-	if err != nil {
-		return time.Time{}, 0, err
-	}
-	return st.ModTime(), st.Size(), nil
-}
-
 func open(name string) (*file, error) {
 	fd, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
 	return &file{fd, make([]byte, 0, 64*1024), false}, nil
-}
-
-func stat(name string) (mtime time.Time, size int64, err error) {
-	st, err := os.Stat(name)
-	if err != nil {
-		return time.Time{}, 0, err
-	}
-	return st.ModTime(), st.Size(), nil
 }
 
 // Count occurrences in s of any bytes in t.
@@ -141,64 +124,6 @@ func dtoi(s string) (n int, i int, ok bool) {
 	return n, i, true
 }
 
-// Hexadecimal to integer.
-// Returns number, characters consumed, success.
-func xtoi(s string) (n int, i int, ok bool) {
-	n = 0
-	for i = 0; i < len(s); i++ {
-		if '0' <= s[i] && s[i] <= '9' {
-			n *= 16
-			n += int(s[i] - '0')
-		} else if 'a' <= s[i] && s[i] <= 'f' {
-			n *= 16
-			n += int(s[i]-'a') + 10
-		} else if 'A' <= s[i] && s[i] <= 'F' {
-			n *= 16
-			n += int(s[i]-'A') + 10
-		} else {
-			break
-		}
-		if n >= big {
-			return 0, i, false
-		}
-	}
-	if i == 0 {
-		return 0, i, false
-	}
-	return n, i, true
-}
-
-// xtoi2 converts the next two hex digits of s into a byte.
-// If s is longer than 2 bytes then the third byte must be e.
-// If the first two bytes of s are not hex digits or the third byte
-// does not match e, false is returned.
-func xtoi2(s string, e byte) (byte, bool) {
-	if len(s) > 2 && s[2] != e {
-		return 0, false
-	}
-	n, ei, ok := xtoi(s[:2])
-	return byte(n), ok && ei == 2
-}
-
-// hasUpperCase tells whether the given string contains at least one upper-case.
-func hasUpperCase(s string) bool {
-	for i := range s {
-		if 'A' <= s[i] && s[i] <= 'Z' {
-			return true
-		}
-	}
-	return false
-}
-
-// lowerASCIIBytes makes x ASCII lowercase in-place.
-func lowerASCIIBytes(x []byte) {
-	for i, b := range x {
-		if 'A' <= b && b <= 'Z' {
-			x[i] += 'a' - 'A'
-		}
-	}
-}
-
 // lowerASCII returns the ASCII lowercase version of b.
 func lowerASCII(b byte) byte {
 	if 'A' <= b && b <= 'Z' {
@@ -207,65 +132,10 @@ func lowerASCII(b byte) byte {
 	return b
 }
 
-// trimSpace returns x without any leading or trailing ASCII whitespace.
-func trimSpace(x string) string {
-	for len(x) > 0 && isSpace(x[0]) {
-		x = x[1:]
-	}
-	for len(x) > 0 && isSpace(x[len(x)-1]) {
-		x = x[:len(x)-1]
-	}
-	return x
-}
-
-// isSpace reports whether b is an ASCII space character.
-func isSpace(b byte) bool {
-	return b == ' ' || b == '\t' || b == '\n' || b == '\r'
-}
-
-// removeComment returns line, removing any '#' byte and any following
-// bytes.
-func removeComment(line string) string {
-	if i := strings.IndexByte(line, '#'); i != -1 {
-		return line[:i]
-	}
-	return line
-}
-
-// foreachField runs fn on each non-empty run of non-space bytes in x.
-// It returns the first non-nil error returned by fn.
-func foreachField(x string, fn func(field string) error) error {
-	x = trimSpace(x)
-	for len(x) > 0 {
-		sp := strings.IndexByte(x, ' ')
-		if sp == -1 {
-			return fn(x)
-		}
-		if field := trimSpace(x[:sp]); len(field) > 0 {
-			if err := fn(field); err != nil {
-				return err
-			}
-		}
-		x = trimSpace(x[sp+1:])
-	}
-	return nil
-}
-
-// stringsHasSuffix is strings.HasSuffix. It reports whether s ends in
-// suffix.
-func stringsHasSuffix(s, suffix string) bool {
-	return len(s) >= len(suffix) && s[len(s)-len(suffix):] == suffix
-}
-
 // stringsHasSuffixFold reports whether s ends in suffix,
 // ASCII-case-insensitively.
 func stringsHasSuffixFold(s, suffix string) bool {
 	return len(s) >= len(suffix) && stringsEqualFold(s[len(s)-len(suffix):], suffix)
-}
-
-// stringsHasPrefix is strings.HasPrefix. It reports whether s begins with prefix.
-func stringsHasPrefix(s, prefix string) bool {
-	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }
 
 // stringsEqualFold is strings.EqualFold, ASCII only. It reports whether s and t

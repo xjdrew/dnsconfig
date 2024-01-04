@@ -9,13 +9,17 @@
 package dnsconfig
 
 import (
+	"net"
 	"net/netip"
+	"os"
 	"strings"
 	"time"
 )
 
 var (
 	DefaultResolvFile = "/etc/resolv.conf"
+
+	getHostname = os.Hostname // variable for testing
 )
 
 func dnsReadDefaultConfig() *DnsConfig {
@@ -61,7 +65,7 @@ func dnsReadConfig(filename string) *DnsConfig {
 				// just an IP address. Otherwise we need DNS
 				// to look it up.
 				if _, err := netip.ParseAddr(f[1]); err == nil {
-					conf.servers = append(conf.servers, JoinHostPort(f[1], "53"))
+					conf.servers = append(conf.servers, net.JoinHostPort(f[1], "53"))
 				}
 			}
 
@@ -172,4 +176,61 @@ func ensureRooted(s string) string {
 		return s
 	}
 	return s + "."
+}
+
+// extend DnsConfig
+
+// avoidDNS reports whether this is a hostname for which we should not
+// use DNS. Currently this includes only .onion, per RFC 7686. See
+// golang.org/issue/13705. Does not cover .local names (RFC 6762),
+// see golang.org/issue/16739.
+func avoidDNS(name string) bool {
+	if name == "" {
+		return true
+	}
+	if name[len(name)-1] == '.' {
+		name = name[:len(name)-1]
+	}
+	return stringsHasSuffixFold(name, ".onion")
+}
+
+// nameList returns a list of names for sequential DNS queries.
+func (conf *DnsConfig) nameList(name string) []string {
+	// Check name length (see isDomainName).
+	l := len(name)
+	rooted := l > 0 && name[l-1] == '.'
+	if l > 254 || l == 254 && !rooted {
+		return nil
+	}
+
+	// If name is rooted (trailing dot), try only that name.
+	if rooted {
+		if avoidDNS(name) {
+			return nil
+		}
+		return []string{name}
+	}
+
+	hasNdots := strings.Count(name, ".") >= conf.ndots
+	name += "."
+	l++
+
+	// Build list of search choices.
+	names := make([]string, 0, 1+len(conf.search))
+	// If name has enough dots, try unsuffixed first.
+	if hasNdots && !avoidDNS(name) {
+		names = append(names, name)
+	}
+	// Try suffixes that are not too long (see isDomainName).
+	for _, suffix := range conf.search {
+		fqdn := name + suffix
+		if !avoidDNS(fqdn) && len(fqdn) <= 254 {
+			names = append(names, fqdn)
+		}
+	}
+	// Try unsuffixed, if not tried first above.
+	if !hasNdots && !avoidDNS(name) {
+		names = append(names, name)
+	}
+	return names
 }

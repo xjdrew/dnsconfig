@@ -46,13 +46,13 @@ func adapterAddresses() ([]*windows.IpAdapterAddresses, error) {
 
 func dnsReadDefaultConfig() (conf *DnsConfig) {
 	conf = &DnsConfig{
-		ndots:    1,
-		timeout:  5 * time.Second,
-		attempts: 2,
+		Ndots:    1,
+		Timeout:  5 * time.Second,
+		Attempts: 2,
 	}
 	defer func() {
-		if len(conf.servers) == 0 {
-			conf.servers = defaultNS
+		if len(conf.Servers) == 0 {
+			conf.Servers = defaultNS
 		}
 	}()
 	aas, err := adapterAddresses()
@@ -90,7 +90,7 @@ func dnsReadDefaultConfig() (conf *DnsConfig) {
 				// Unexpected type.
 				continue
 			}
-			conf.servers = append(conf.servers, net.JoinHostPort(ip.String(), "53"))
+			conf.Servers = append(conf.Servers, net.JoinHostPort(ip.String(), "53"))
 		}
 	}
 	return conf

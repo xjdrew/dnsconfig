@@ -23,149 +23,149 @@ var dnsReadConfigTests = []struct {
 	{
 		name: "testdata/resolv.conf",
 		want: &DnsConfig{
-			servers:    []string{"8.8.8.8:53", "[2001:4860:4860::8888]:53", "[fe80::1%lo0]:53"},
-			search:     []string{"localdomain."},
-			ndots:      5,
-			timeout:    10 * time.Second,
-			attempts:   3,
-			rotate:     true,
-			unknownOpt: true, // the "options attempts 3" line
+			Servers:    []string{"8.8.8.8:53", "[2001:4860:4860::8888]:53", "[fe80::1%lo0]:53"},
+			Search:     []string{"localdomain."},
+			Ndots:      5,
+			Timeout:    10 * time.Second,
+			Attempts:   3,
+			Rotate:     true,
+			UnknownOpt: true, // the "options attempts 3" line
 		},
 	},
 	{
 		name: "testdata/domain-resolv.conf",
 		want: &DnsConfig{
-			servers:  []string{"8.8.8.8:53"},
-			search:   []string{"localdomain."},
-			ndots:    1,
-			timeout:  5 * time.Second,
-			attempts: 2,
+			Servers:  []string{"8.8.8.8:53"},
+			Search:   []string{"localdomain."},
+			Ndots:    1,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
 		},
 	},
 	{
 		name: "testdata/search-resolv.conf",
 		want: &DnsConfig{
-			servers:  []string{"8.8.8.8:53"},
-			search:   []string{"test.", "invalid."},
-			ndots:    1,
-			timeout:  5 * time.Second,
-			attempts: 2,
+			Servers:  []string{"8.8.8.8:53"},
+			Search:   []string{"test.", "invalid."},
+			Ndots:    1,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
 		},
 	},
 	{
 		name: "testdata/search-single-dot-resolv.conf",
 		want: &DnsConfig{
-			servers:  []string{"8.8.8.8:53"},
-			search:   []string{},
-			ndots:    1,
-			timeout:  5 * time.Second,
-			attempts: 2,
+			Servers:  []string{"8.8.8.8:53"},
+			Search:   []string{},
+			Ndots:    1,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
 		},
 	},
 	{
 		name: "testdata/empty-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    1,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    1,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/invalid-ndots-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    0,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    0,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/large-ndots-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    15,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    15,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/negative-ndots-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    0,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    0,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/openbsd-resolv.conf",
 		want: &DnsConfig{
-			ndots:    1,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			lookup:   []string{"file", "bind"},
-			servers:  []string{"169.254.169.254:53", "10.240.0.1:53"},
-			search:   []string{"c.symbolic-datum-552.internal."},
+			Ndots:    1,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Lookup:   []string{"file", "bind"},
+			Servers:  []string{"169.254.169.254:53", "10.240.0.1:53"},
+			Search:   []string{"c.symbolic-datum-552.internal."},
 		},
 	},
 	{
 		name: "testdata/single-request-resolv.conf",
 		want: &DnsConfig{
-			servers:       defaultNS,
-			ndots:         1,
-			singleRequest: true,
-			timeout:       5 * time.Second,
-			attempts:      2,
-			search:        []string{"domain.local."},
+			Servers:       defaultNS,
+			Ndots:         1,
+			SingleRequest: true,
+			Timeout:       5 * time.Second,
+			Attempts:      2,
+			Search:        []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/single-request-reopen-resolv.conf",
 		want: &DnsConfig{
-			servers:       defaultNS,
-			ndots:         1,
-			singleRequest: true,
-			timeout:       5 * time.Second,
-			attempts:      2,
-			search:        []string{"domain.local."},
+			Servers:       defaultNS,
+			Ndots:         1,
+			SingleRequest: true,
+			Timeout:       5 * time.Second,
+			Attempts:      2,
+			Search:        []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/linux-use-vc-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    1,
-			useTCP:   true,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    1,
+			UseTCP:   true,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/freebsd-usevc-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    1,
-			useTCP:   true,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    1,
+			UseTCP:   true,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 	{
 		name: "testdata/openbsd-tcp-resolv.conf",
 		want: &DnsConfig{
-			servers:  defaultNS,
-			ndots:    1,
-			useTCP:   true,
-			timeout:  5 * time.Second,
-			attempts: 2,
-			search:   []string{"domain.local."},
+			Servers:  defaultNS,
+			Ndots:    1,
+			UseTCP:   true,
+			Timeout:  5 * time.Second,
+			Attempts: 2,
+			Search:   []string{"domain.local."},
 		},
 	},
 }
@@ -177,14 +177,14 @@ func TestDNSReadConfig(t *testing.T) {
 
 	for _, tt := range dnsReadConfigTests {
 		want := *tt.want
-		if len(want.search) == 0 {
-			want.search = dnsDefaultSearch()
+		if len(want.Search) == 0 {
+			want.Search = dnsDefaultSearch()
 		}
 		conf := dnsReadConfig(tt.name)
-		if conf.err != nil {
-			t.Fatal(conf.err)
+		if conf.Err != nil {
+			t.Fatal(conf.Err)
 		}
-		conf.mtime = time.Time{}
+		conf.Mtime = time.Time{}
 		if !reflect.DeepEqual(conf, &want) {
 			t.Errorf("%s:\ngot: %+v\nwant: %+v", tt.name, conf, want)
 		}
@@ -197,16 +197,16 @@ func TestDNSReadMissingFile(t *testing.T) {
 	getHostname = func() (string, error) { return "host.domain.local", nil }
 
 	conf := dnsReadConfig("a-nonexistent-file")
-	if !os.IsNotExist(conf.err) {
-		t.Errorf("missing resolv.conf:\ngot: %v\nwant: %v", conf.err, fs.ErrNotExist)
+	if !os.IsNotExist(conf.Err) {
+		t.Errorf("missing resolv.conf:\ngot: %v\nwant: %v", conf.Err, fs.ErrNotExist)
 	}
-	conf.err = nil
+	conf.Err = nil
 	want := &DnsConfig{
-		servers:  defaultNS,
-		ndots:    1,
-		timeout:  5 * time.Second,
-		attempts: 2,
-		search:   []string{"domain.local."},
+		Servers:  defaultNS,
+		Ndots:    1,
+		Timeout:  5 * time.Second,
+		Attempts: 2,
+		Search:   []string{"domain.local."},
 	}
 	if !reflect.DeepEqual(conf, want) {
 		t.Errorf("missing resolv.conf:\ngot: %+v\nwant: %+v", conf, want)
@@ -269,11 +269,11 @@ func TestDNSNameLength(t *testing.T) {
 
 	for _, tt := range dnsReadConfigTests {
 		conf := dnsReadConfig(tt.name)
-		if conf.err != nil {
-			t.Fatal(conf.err)
+		if conf.Err != nil {
+			t.Fatal(conf.Err)
 		}
 
-		suffixList := tt.want.search
+		suffixList := tt.want.Search
 		if len(suffixList) == 0 {
 			suffixList = dnsDefaultSearch()
 		}

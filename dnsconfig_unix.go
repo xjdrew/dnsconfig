@@ -29,24 +29,24 @@ func dnsReadDefaultConfig() *DnsConfig {
 // See resolv.conf(5) on a Linux machine.
 func dnsReadConfig(filename string) *DnsConfig {
 	conf := &DnsConfig{
-		ndots:    1,
-		timeout:  5 * time.Second,
-		attempts: 2,
+		Ndots:    1,
+		Timeout:  5 * time.Second,
+		Attempts: 2,
 	}
 	file, err := open(filename)
 	if err != nil {
-		conf.servers = defaultNS
-		conf.search = dnsDefaultSearch()
-		conf.err = err
+		conf.Servers = defaultNS
+		conf.Search = dnsDefaultSearch()
+		conf.Err = err
 		return conf
 	}
 	defer file.close()
 	if fi, err := file.file.Stat(); err == nil {
-		conf.mtime = fi.ModTime()
+		conf.Mtime = fi.ModTime()
 	} else {
-		conf.servers = defaultNS
-		conf.search = dnsDefaultSearch()
-		conf.err = err
+		conf.Servers = defaultNS
+		conf.Search = dnsDefaultSearch()
+		conf.Err = err
 		return conf
 	}
 	for line, ok := file.readLine(); ok; line, ok = file.readLine() {
@@ -60,28 +60,28 @@ func dnsReadConfig(filename string) *DnsConfig {
 		}
 		switch f[0] {
 		case "nameserver": // add one name server
-			if len(f) > 1 && len(conf.servers) < 3 { // small, but the standard limit
+			if len(f) > 1 && len(conf.Servers) < 3 { // small, but the standard limit
 				// One more check: make sure server name is
 				// just an IP address. Otherwise we need DNS
 				// to look it up.
 				if _, err := netip.ParseAddr(f[1]); err == nil {
-					conf.servers = append(conf.servers, net.JoinHostPort(f[1], "53"))
+					conf.Servers = append(conf.Servers, net.JoinHostPort(f[1], "53"))
 				}
 			}
 
 		case "domain": // set search path to just this domain
 			if len(f) > 1 {
-				conf.search = []string{ensureRooted(f[1])}
+				conf.Search = []string{ensureRooted(f[1])}
 			}
 
 		case "search": // set search path to given servers
-			conf.search = make([]string, 0, len(f)-1)
+			conf.Search = make([]string, 0, len(f)-1)
 			for i := 1; i < len(f); i++ {
 				name := ensureRooted(f[i])
 				if name == "." {
 					continue
 				}
-				conf.search = append(conf.search, name)
+				conf.Search = append(conf.Search, name)
 			}
 
 		case "options": // magic options
@@ -94,28 +94,28 @@ func dnsReadConfig(filename string) *DnsConfig {
 					} else if n > 15 {
 						n = 15
 					}
-					conf.ndots = n
+					conf.Ndots = n
 				case hasPrefix(s, "timeout:"):
 					n, _, _ := dtoi(s[8:])
 					if n < 1 {
 						n = 1
 					}
-					conf.timeout = time.Duration(n) * time.Second
+					conf.Timeout = time.Duration(n) * time.Second
 				case hasPrefix(s, "attempts:"):
 					n, _, _ := dtoi(s[9:])
 					if n < 1 {
 						n = 1
 					}
-					conf.attempts = n
+					conf.Attempts = n
 				case s == "rotate":
-					conf.rotate = true
+					conf.Rotate = true
 				case s == "single-request" || s == "single-request-reopen":
 					// Linux option:
 					// http://man7.org/linux/man-pages/man5/resolv.conf.5.html
 					// "By default, glibc performs IPv4 and IPv6 lookups in parallel [...]
 					//  This option disables the behavior and makes glibc
 					//  perform the IPv6 and IPv4 requests sequentially."
-					conf.singleRequest = true
+					conf.SingleRequest = true
 				case s == "use-vc" || s == "usevc" || s == "tcp":
 					// Linux (use-vc), FreeBSD (usevc) and OpenBSD (tcp) option:
 					// http://man7.org/linux/man-pages/man5/resolv.conf.5.html
@@ -123,16 +123,16 @@ func dnsReadConfig(filename string) *DnsConfig {
 					//  This option forces the use of TCP for DNS resolutions."
 					// https://www.freebsd.org/cgi/man.cgi?query=resolv.conf&sektion=5&manpath=freebsd-release-ports
 					// https://man.openbsd.org/resolv.conf.5
-					conf.useTCP = true
+					conf.UseTCP = true
 				case s == "trust-ad":
-					conf.trustAD = true
+					conf.TrustAD = true
 				case s == "edns0":
 					// We use EDNS by default.
 					// Ignore this option.
 				case s == "no-reload":
-					conf.noReload = true
+					conf.NoReload = true
 				default:
-					conf.unknownOpt = true
+					conf.UnknownOpt = true
 				}
 			}
 
@@ -140,17 +140,17 @@ func dnsReadConfig(filename string) *DnsConfig {
 			// OpenBSD option:
 			// https://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man5/resolv.conf.5
 			// "the legal space-separated values are: bind, file, yp"
-			conf.lookup = f[1:]
+			conf.Lookup = f[1:]
 
 		default:
-			conf.unknownOpt = true
+			conf.UnknownOpt = true
 		}
 	}
-	if len(conf.servers) == 0 {
-		conf.servers = defaultNS
+	if len(conf.Servers) == 0 {
+		conf.Servers = defaultNS
 	}
-	if len(conf.search) == 0 {
-		conf.search = dnsDefaultSearch()
+	if len(conf.Search) == 0 {
+		conf.Search = dnsDefaultSearch()
 	}
 	return conf
 }
@@ -211,18 +211,18 @@ func (conf *DnsConfig) nameList(name string) []string {
 		return []string{name}
 	}
 
-	hasNdots := strings.Count(name, ".") >= conf.ndots
+	hasNdots := strings.Count(name, ".") >= conf.Ndots
 	name += "."
 	l++
 
 	// Build list of search choices.
-	names := make([]string, 0, 1+len(conf.search))
+	names := make([]string, 0, 1+len(conf.Search))
 	// If name has enough dots, try unsuffixed first.
 	if hasNdots && !avoidDNS(name) {
 		names = append(names, name)
 	}
 	// Try suffixes that are not too long (see isDomainName).
-	for _, suffix := range conf.search {
+	for _, suffix := range conf.Search {
 		fqdn := name + suffix
 		if !avoidDNS(fqdn) && len(fqdn) <= 254 {
 			names = append(names, fqdn)
